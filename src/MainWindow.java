@@ -1,3 +1,5 @@
+import org.eclipse.swt.custom.CTabFolder;
+import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.*;
@@ -9,7 +11,7 @@ public class MainWindow
 	///
 	//main components
 	Display display= new Display();
-	Shell shell= new Shell();
+	Shell shell= new Shell(display);
 	//menubar
 	private Menu menuBar, menuFile, menuEdit, menuAbout;
 	private MenuItem menuFileHeader, menuEditHeader, menuAboutHeader;
@@ -29,6 +31,19 @@ public class MainWindow
 	public MainWindow() 
 	{	
 		shell.setMinimumSize(new Point(600,400));
+		shell.setText("Notepad");
+		
+		//tabs
+		final TabFolder tabfolder = new TabFolder(shell, SWT.TOP|SWT.BORDER);
+		TabItem tabzero = new TabItem(tabfolder, SWT.NULL);
+		tabzero.setText("new "+ documentnum);
+		
+		textField = new Text(tabfolder, SWT.WRAP| SWT.MULTI | SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL | SWT.RESIZE );
+		tabzero.setControl(textField);
+		
+		tabfolder.setSize(shell.getSize().x, shell.getSize().y);
+		
+		//menuBar
 		menuBar = new Menu(shell, SWT.BAR);
 		
 		menuFileHeader = new MenuItem(menuBar,SWT.CASCADE);
@@ -51,15 +66,10 @@ public class MainWindow
 		menuAbout = new Menu(shell,SWT.DROP_DOWN);
 		menuAboutHeader.setMenu(menuAbout);
 		
-		textField = new Text(shell, SWT.WRAP| SWT.MULTI | SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL | SWT.RESIZE);
-		
 		shell.setMenuBar(menuBar);
 		shell.pack();
-		shell.setLayout(new RowLayout());
-		shell.setBounds(100, 100, 400, 400);
-		textField.setSize(shell.getSize());
-		textField.setBounds(0, 0, shell.getSize().x, shell.getSize().y);
-			
+		shell.setLayout(new FillLayout());
+		shell.setBounds(100, 100, 400, 400);		
 		shell.setVisible(true);
 	}
 
@@ -77,11 +87,5 @@ public class MainWindow
 		while (!shell.isDisposed())
 			if(display.readAndDispatch())
 				display.sleep();
-			
-		/*
-		this.frameMain.pack();
-		this.frameMain.resize(400, 400);
-		this.frameMain.setVisible(true);
-		*/
 	}
 }
