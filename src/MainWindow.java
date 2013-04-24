@@ -1,6 +1,8 @@
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -21,9 +23,11 @@ public class MainWindow
 	Display display= new Display();
 	Shell shell= new Shell(display);
 	//menubar
-	private Menu menuBar, menuFile, menuEdit, menuAbout;
-	private MenuItem menuFileHeader, menuEditHeader, menuAboutHeader;
-	private MenuItem menuFileSave, menuFileOpen, menuFileNew;
+	private Menu menuBar, menuFile, menuEdit, menuEncode, menuAbout;
+	private MenuItem menuFileHeader, menuEditHeader, menuEncodeHeader, menuAboutHeader;
+	private MenuItem menuFileSave, menuFileOpen, menuFileNew, menuFileSaveAs, menuFilePrint;
+	private MenuItem menuEditFont, menuEditView;
+	private MenuItem menuEncodeEncode;
 	//RMB menu
 	private Menu rmbMenuMain;
 	private MenuItem menuOpenTab, menuCloseTab, menuCloseAllTabs;
@@ -32,7 +36,6 @@ public class MainWindow
 	//tabfolder
 	final CTabFolder tabfolder;
 	///
-	
 	//constant sizes
 	private static int menuwidth = 40;
 	private static int menuheigth = 40; 
@@ -48,11 +51,7 @@ public class MainWindow
 		
 		//tabs
 		tabfolder = new CTabFolder(shell, SWT.TOP|SWT.BORDER);
-		CTabItem tabzero = new CTabItem(tabfolder, SWT.CLOSE);
-		tabzero.setText("new "+ documentnum);
-		
-		textField = new Text(tabfolder, SWT.WRAP| SWT.MULTI | SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL | SWT.RESIZE );
-		tabzero.setControl(textField);
+		OpenNewTab(getDocumentNum());
 		
 		tabfolder.setSize(shell.getSize().x, shell.getSize().y);
 		tabfolder.addMouseListener(new MouseListener() 
@@ -141,11 +140,57 @@ public class MainWindow
 		
 		menuFileSave = new MenuItem(menuFile, SWT.PUSH);
 		menuFileSave.setText("&Save");
+		menuFileSave.setAccelerator(SWT.CTRL+'S');
+		menuFileSave.addSelectionListener(new SelectionListener() 
+		{
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				Save(tabfolder.getSelection());
+			}
+			
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		
+		menuFileSaveAs = new MenuItem(menuFile, SWT.PUSH);
+		menuFileSaveAs.setText("Save as");
+		menuFileSaveAs.setAccelerator(SWT.CTRL+SWT.SHIFT+'S');
+		menuFileSaveAs.addSelectionListener(new SelectionListener() 
+		{
+			
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				// TODO Auto-generated method stub
+				SaveAs(tabfolder.getSelection());
+			}
+			
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) 
+			{
+				// TODO Auto-generated method stub
+				
+			}
+		});
 		
 		menuEditHeader = new MenuItem(menuBar, SWT.CASCADE);
 		menuEditHeader.setText("Edit");
 		menuEdit = new Menu(shell,SWT.DROP_DOWN);
 		menuEditHeader.setMenu(menuEdit);
+		
+		menuEditFont = new MenuItem(menuEdit, SWT.PUSH);
+		menuEditFont.setText("Font");
+		menuEditView = new MenuItem(menuEdit, SWT.PUSH);
+		menuEditView.setText("View");
+		
+		menuEncodeHeader = new MenuItem(menuBar,SWT.CASCADE);
+		menuEncodeHeader.setText("Encoding");
+		menuEncode = new Menu(shell,SWT.DROP_DOWN);
+		menuEncodeHeader.setMenu(menuEncode);
 		
 		menuAboutHeader = new MenuItem(menuBar, SWT.CASCADE);
 		menuAboutHeader.setText("About");
@@ -153,11 +198,12 @@ public class MainWindow
 		menuAboutHeader.setMenu(menuAbout);
 		
 		//RMBMenu
-		rmbMenuMain = new Menu(shell, SWT.POP_UP);
+		rmbMenuMain = new Menu (tabfolder);
 		menuOpenTab = new MenuItem(rmbMenuMain, SWT.DROP_DOWN);
 		menuOpenTab.setText("Open new tab\tCtrl+N");
 		menuCloseTab = new MenuItem(rmbMenuMain, SWT.DROP_DOWN);
-		menuCloseTab.setText("Close tab\tCtrl+X");
+		menuCloseTab.setText("Close tab\tCtrl+W");
+		menuCloseTab.setAccelerator(SWT.CTRL+'W');
 		menuCloseAllTabs = new MenuItem(rmbMenuMain, SWT.DROP_DOWN);
 		menuCloseAllTabs.setText("Close all tabs");
 		
@@ -182,7 +228,6 @@ public class MainWindow
 		});
 		
 		
-		
 		menuCloseTab.addSelectionListener(new SelectionListener() 
 		{
 			
@@ -190,6 +235,7 @@ public class MainWindow
 			public void widgetSelected(SelectionEvent e) 
 			{
 				CloseTab(tabfolder.getSelection());
+				decDocumentNum();
 			}
 			
 			@Override
@@ -252,6 +298,7 @@ public class MainWindow
 		newtab.setText("new" + num);
 		Text newtext = new Text(tabfolder, SWT.WRAP| SWT.MULTI | SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL | SWT.RESIZE );
 		newtab.setControl(newtext);
+		newtab.setData(null);
 	}
 	
 	private void OpenNewTab(File input)
@@ -266,12 +313,14 @@ public class MainWindow
 				sb.append(line+"\n");
 				line = reader.readLine();
 			}
+			CTabItem newtab = new CTabItem(tabfolder, SWT.CLOSE | SWT.FOCUSED);
 			Text newtext = new Text(tabfolder, SWT.WRAP| SWT.MULTI | SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL | SWT.RESIZE);
 			newtext.setText(sb.toString());
-			CTabItem newtab = new CTabItem(tabfolder, SWT.CLOSE | SWT.FOCUSED);
 			newtab.setText(input.getName());
 			newtab.setControl(newtext);
+			newtab.setData(input);
 			tabfolder.setSelection(newtab);
+			newtab.setData(input.getAbsolutePath());
 			reader.close();
 		}
 		catch(Exception e)
@@ -283,6 +332,71 @@ public class MainWindow
 		}
 	}
 	
+	private void Save(CTabItem tab)
+	{
+		if (tab.getData() != null)
+		{
+			String filen = tab.getData().toString();
+			File file = new File(filen);
+			try
+			{
+				Text buftext =  (Text) tab.getControl();
+				FileOutputStream fos = new FileOutputStream(file);
+				byte[] buf = new byte[buftext.getText().length()];
+				buf = buftext.getText().getBytes(); 
+				fos.write(buf);
+				fos.close();
+			}
+			catch(Exception e)
+			{
+				MessageBox msg = new MessageBox(shell, SWT.YES|SWT.NO);
+				msg.setMessage(e.getMessage());
+				msg.open();
+			}
+		}
+		else
+		{
+			SaveAs(tab);
+		}
+	}
+	
+	private void SaveAs(CTabItem tab)
+	{
+		boolean saved = false;
+		FileDialog dlgsaveas = new FileDialog(shell, SWT.SAVE);
+		String filep = null;
+		String filen = null;
+		
+		if (tab.getData() != null)
+			dlgsaveas.setFilterPath(tab.getData().toString());
+		else dlgsaveas.setFilterPath("C:\\");
+		while(!saved)
+		{
+			filep = dlgsaveas.open();
+			if (filep != null)
+			{
+				File file = new File(filep);
+				if (file.exists())
+				{
+					MessageBox msg = new MessageBox(shell, SWT.YES|SWT.NO);
+					msg.setMessage(filep + " already exists. Rewrite?");
+					saved = msg.open() == SWT.YES;
+				}
+				else saved = true;
+			}
+			else saved = true;
+		}
+		filen = dlgsaveas.getFileName();
+		if (saved)
+		{
+			if (tab.getData() == null)
+			{
+				tab.setData(filep);
+				tab.setText(filen);
+			}
+			Save(tab);
+		}
+	}
 	private void CloseTab(CTabItem tab)
 	{
 		tab.dispose();
