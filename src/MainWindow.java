@@ -1,13 +1,7 @@
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
-
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.events.*;
@@ -98,6 +92,7 @@ public class MainWindow
 			public void widgetSelected(SelectionEvent e) 
 			{
 				FileDialog fldialOpen = new FileDialog(shell, SWT.OPEN|SWT.MULTI);
+				fldialOpen.setText("Open");
 				String[] names;
 				if (fldialOpen.open() != null)
 				{
@@ -364,12 +359,20 @@ public class MainWindow
 	{
 		boolean saved = false;
 		FileDialog dlgsaveas = new FileDialog(shell, SWT.SAVE);
+		
 		String filep = null;
 		String filen = null;
 		
 		if (tab.getData() != null)
+		{
 			dlgsaveas.setFilterPath(tab.getData().toString());
-		else dlgsaveas.setFilterPath("C:\\");
+			dlgsaveas.setText("Save...");
+		}
+		else
+		{
+			dlgsaveas.setFilterPath("C:\\");
+			dlgsaveas.setText("Save As...");
+		}
 		while(!saved)
 		{
 			filep = dlgsaveas.open();
@@ -384,7 +387,11 @@ public class MainWindow
 				}
 				else saved = true;
 			}
-			else saved = true;
+			else
+			{
+				saved = false;
+				break;
+			}
 		}
 		filen = dlgsaveas.getFileName();
 		if (saved)
