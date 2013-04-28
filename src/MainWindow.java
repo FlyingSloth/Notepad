@@ -14,8 +14,9 @@ public class MainWindow
 {
 	///
 	//main components
-	Display display= new Display();
-	Shell shell= new Shell(display);
+	Display display = new Display();
+	Shell shell = new Shell(display);
+	Shell shellEdit = new Shell();
 	//menubar
 	private Menu menuBar, menuFile, menuEdit, menuEncode, menuAbout;
 	private MenuItem menuFileHeader, menuEditHeader, menuEncodeHeader, menuAboutHeader;
@@ -25,8 +26,6 @@ public class MainWindow
 	//RMB menu
 	private Menu rmbMenuMain;
 	private MenuItem menuOpenTab, menuCloseTab, menuCloseAllTabs;
-	//text field
-	private Text textField;
 	//tabfolder
 	final CTabFolder tabfolder;
 	///
@@ -37,6 +36,10 @@ public class MainWindow
 	
 	//tabnumber
 	private static int documentnum = 1;
+	
+	FileDialog dlgsaveas;
+	//extentions
+	String[] Extentions = {"*.txt", "*.*"};
 	
 	public MainWindow() 
 	{	
@@ -93,6 +96,7 @@ public class MainWindow
 			{
 				FileDialog fldialOpen = new FileDialog(shell, SWT.OPEN|SWT.MULTI);
 				fldialOpen.setText("Open");
+				fldialOpen.setFilterExtensions(Extentions);
 				String[] names;
 				if (fldialOpen.open() != null)
 				{
@@ -179,6 +183,23 @@ public class MainWindow
 		
 		menuEditFont = new MenuItem(menuEdit, SWT.PUSH);
 		menuEditFont.setText("Font");
+		menuEditFont.addSelectionListener(new SelectionListener() 
+		{
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				// TODO Auto-generated method stub
+				shellEdit.setText("Edit");
+				shellEdit.open();
+			}
+			
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		
 		menuEditView = new MenuItem(menuEdit, SWT.PUSH);
 		menuEditView.setText("View");
 		
@@ -186,6 +207,8 @@ public class MainWindow
 		menuEncodeHeader.setText("Encoding");
 		menuEncode = new Menu(shell,SWT.DROP_DOWN);
 		menuEncodeHeader.setMenu(menuEncode);
+		menuEncodeEncode = new MenuItem(menuEncode, SWT.PUSH);
+		menuEncodeEncode.setText("Encode");
 		
 		menuAboutHeader = new MenuItem(menuBar, SWT.CASCADE);
 		menuAboutHeader.setText("About");
@@ -358,20 +381,18 @@ public class MainWindow
 	private void SaveAs(CTabItem tab)
 	{
 		boolean saved = false;
-		FileDialog dlgsaveas = new FileDialog(shell, SWT.SAVE);
-		
+		dlgsaveas = new FileDialog(shell, SWT.SAVE);
+		dlgsaveas.setText("Save As...");		
 		String filep = null;
 		String filen = null;
 		
 		if (tab.getData() != null)
 		{
 			dlgsaveas.setFilterPath(tab.getData().toString());
-			dlgsaveas.setText("Save...");
 		}
 		else
 		{
 			dlgsaveas.setFilterPath("C:\\");
-			dlgsaveas.setText("Save As...");
 		}
 		while(!saved)
 		{
